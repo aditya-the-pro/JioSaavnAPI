@@ -37,7 +37,7 @@ def get_trending():
     return f"https://www.jiosaavn.com/api.php?__call=content.getTrending&api_version=4&_format=json&_marker=0&ctx=wap6dot0&entity_type=album&entity_language=punjabi"
 
 
-def get_home_page():
+def get_homepage():
     return f"https://www.jiosaavn.com/api.php?__call=content.getHomepageData"
 
 

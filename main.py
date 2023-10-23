@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 import httpx
 import endpoints
 import helper
@@ -18,9 +18,14 @@ async def make_request(url: str):
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 202:
-            exit({"msg": "server ip got banned for api rate limits"})
+            raise HTTPException(
+                status_code=200,
+                detail={"msg": "server ip got banned for api rate limits"},
+            )
         else:
-            exit({"msg": "unknown server error go debug it"})
+            raise HTTPException(
+                status_code=200, detail={"msg": "unknown server error go debug it"}
+            )
 
 
 def base_url(request: Request):
@@ -72,14 +77,14 @@ async def lyrics_handler(song_id):
     return helper.lyricsHelper(result)
 
 
-@app.get("/test")
-async def test_handler(request: Request):
-    return {"link": base_url(request)}
-
-# make a decorator for mchecking remote reuqets for http error 202 and 500
+@app.get("/homepage-data")
+async def homepage_data():
+    url = endpoints.get_homepage()
+    result = await make_request(url)
+    return result
 
 
 if __name__ == "__main__":
     # disable reloder while deploying it to vercel
-    # uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True) for making changes
+    # uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
     uvicorn.run("main:app", host="0.0.0.0", port=8080)
