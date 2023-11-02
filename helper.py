@@ -37,8 +37,11 @@ def imgHelper(link):
 
 
 def durationHelper(seconds: int):
-    t = divmod(seconds, 60)
-    return f"{t[0]}:{t[1]}"
+    (mins,secs) = divmod(seconds, 60)
+    # ? : check the seconds for wildcard or tenth place zero
+    if secs in range(0,9):
+        secs = f"0{secs}"
+    return f"{mins}:{secs}"
 
 
 def getDirectURL(link):
