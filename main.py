@@ -7,7 +7,7 @@ import helper
 # * INFO : experimental
 
 
-# TODO : add the playlist, homepage, radio features
+# TODO : add the playlist, homepage features and more :)
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -82,6 +82,29 @@ async def homepage_data():
     url = endpoints.get_homepage()
     result = await make_request(url)
     return result
+
+
+@app.get('/create_radio/{song_id}')
+async def create_radio(song_id):
+    # ! : even if the song_id is wrong it will return you a station id which will give you zero songs
+    url = endpoints.create_radio_station(song_id)
+    result = await make_request(url)
+    return result
+
+
+@app.get('/get_radio_songs/{station_id}')
+async def get_radio_songs(station_id):
+    # ? : if the station id is correct you will get the songs else you will get nothing
+    url = endpoints.get_songs_from_radio(station_id)
+    result = await make_request(url)
+    if "error" in result:
+        raise HTTPException(
+            status_code=404,
+                detail={"msg": "wrong station id or generated from non-existing song id"},
+        )
+    else :
+        # * : if everything goes right set the stage for result
+        return helper.radio_song_helper(result)
 
 
 if __name__ == "__main__":

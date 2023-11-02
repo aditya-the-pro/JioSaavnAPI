@@ -163,3 +163,15 @@ def multiSongList(song_ids_str, base_url):
 
 
 
+def radio_song_helper(song_dict:dict):
+    # * : here make the full songs dict and do not append the station id again the response
+    
+    relayer_dict = []
+    for x in song_dict:
+        if x != 'stationid':
+            relayer_dict.append(song_dict[x]['song'])
+            
+    song_dict = []
+    for x in relayer_dict:
+        song_dict.append(jsonDataMaker(x))
+    return song_dict

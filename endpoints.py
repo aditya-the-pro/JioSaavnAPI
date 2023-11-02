@@ -43,3 +43,13 @@ def get_homepage():
 
 def playlist(playlist_id):
     return f"https://www.jiosaavn.com/api.php?__call=playlist.getDetails&_format=json&cc=in&_marker=0%3F_marker%3D0&listid={playlist_id}"
+
+
+def create_radio_station(song_id):
+    # basically give the song id to start radio for
+    song_id = "[\""+urllib.parse.quote(song_id)+"\"]"
+    return f"https://www.jiosaavn.com/api.php?__call=webradio.createEntityStation&entity_id={song_id}&entity_type=queue&freemium=&shared=&api_version=4&_format=json&_marker=0&ctx=wap6dot0"
+    
+
+def get_songs_from_radio(station_id):    
+    return f"https://www.jiosaavn.com/api.php?__call=webradio.getSong&stationid={station_id}&k=5&next=1&api_version=4&_format=json&_marker=0&ctx=wap6dot0"
