@@ -28,11 +28,30 @@ def jsonDataMaker(rawJson):
 
 
 def imgHelper(link):
-    links = {
-        "50x50": link.replace("150x150", "50x50"),
-        "150x150": link,
-        "500x500": link.replace("150x150", "500x500"),
-    }
+    # ? : check the img size if it is 50x50 or 150x150
+    size = "50x50" if "50x50" in link else "150x150" if "150x150" in link else "500x500"
+    match size:
+        case "50x50":
+            links = {
+        "50x50": link,
+        "150x150": link.replace(size, "150x150"),
+        "500x500": link.replace(size, "500x500"),
+        }
+        case "150x150":
+            links = {
+                "50x50": link.replace(size, "50x50"),
+                "150x150": link,
+                "500x500": link.replace(size, "500x500"),
+                    }
+        case "500x500":
+            links = {
+            "50x50": link.replace(size, "50x50"),
+            "150x150": link.replace(size, "150x150"),
+            "500x500": link,
+            }
+        case _:
+            # ! : they improved their img quality i doubt
+            links = {"unknown img size found"}
     return links
 
 
@@ -95,7 +114,7 @@ def resultRender(data: dict):
                 "title": x["title"],
                 "imgs": imgHelper(x["image"]),
                 "album": x["more_info"]["album"],
-                "description": reverse_sentence(x["subtitle"]),
+                "description": x["subtitle"],
                 "more_info": {
                     "vlink": x["more_info"].get("vlink"),
                     "singers": artistHelper(
@@ -110,13 +129,6 @@ def resultRender(data: dict):
             t.append(b)
 
         return t
-
-
-def reverse_sentence(sentence):
-    words = sentence.split()
-    words.reverse()
-    reversed_sentence = " ".join(words)
-    return reversed_sentence
 
 
 def lyricsHelper(json):
@@ -137,13 +149,9 @@ def albumSearchHelper(json, base_url):
                 {
                     "id": x["id"],
                     "title": x["title"],
-                    "img": {
-                        "50x50": x["image"],
-                        "150x150": x["image"].replace("50x50", "150x150"),
-                        "500x500": x["image"].replace("50x50", "500x500"),
-                    },
+                    "img": imgHelper(x["image"]),
                     "music": x["music"],
-                    "description": reverse_sentence(x["description"]),
+                    "description": x["description"],
                     "more_info": {
                         "year": x["more_info"]["year"],
                         "language": x["more_info"]["language"],
