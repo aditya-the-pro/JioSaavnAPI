@@ -58,8 +58,7 @@ def imgHelper(link):
 def durationHelper(seconds: int):
     (mins,secs) = divmod(seconds, 60)
     # ? : check the seconds for wildcard or tenth place zero
-    if secs in range(0,9):
-        secs = f"0{secs}"
+    secs = f"0{secs}" if secs in range(0,9) else secs
     return f"{mins}:{secs}"
 
 
