@@ -41,28 +41,55 @@ from models.search_models.search_entity_song import SearchEntitySong
 def imgHelper(link):
     # ? : check the img size if it is 50x50 or 150x150
     size = "50x50" if "50x50" in link else "150x150" if "150x150" in link else "500x500"
-    match size:
-        case "50x50":
-            links = {
+    
+    
+    # ! : due to vercel only supporting py version 3.9 i am not using match here if new ver comes change it
+    
+    # match size:
+    #     case "50x50":
+    #         links = {
+    #             "50x50": link,
+    #             "150x150": link.replace(size, "150x150"),
+    #             "500x500": link.replace(size, "500x500"),
+    #         }
+    #     case "150x150":
+    #         links = {
+    #             "50x50": link.replace(size, "50x50"),
+    #             "150x150": link,
+    #             "500x500": link.replace(size, "500x500"),
+    #         }
+    #     case "500x500":
+    #         links = {
+    #             "50x50": link.replace(size, "50x50"),
+    #             "150x150": link.replace(size, "150x150"),
+    #             "500x500": link,
+    #         }
+    #     case _:
+    #         # ! : they improved their img quality i doubt
+    #         links = {"unknown img size found"}
+    
+    
+    if size == "50x50":
+        links = {
                 "50x50": link,
                 "150x150": link.replace(size, "150x150"),
                 "500x500": link.replace(size, "500x500"),
             }
-        case "150x150":
-            links = {
-                "50x50": link.replace(size, "50x50"),
-                "150x150": link,
-                "500x500": link.replace(size, "500x500"),
-            }
-        case "500x500":
-            links = {
-                "50x50": link.replace(size, "50x50"),
-                "150x150": link.replace(size, "150x150"),
-                "500x500": link,
-            }
-        case _:
-            # ! : they improved their img quality i doubt
-            links = {"unknown img size found"}
+    elif size == "150x150":
+        links = {
+                 "50x50": link.replace(size, "50x50"),
+                 "150x150": link,
+                 "500x500": link.replace(size, "500x500"),
+             }
+    elif size == "500x500":
+        links = {
+                 "50x50": link.replace(size, "50x50"),
+                 "150x150": link.replace(size, "150x150"),
+                 "500x500": link,
+             }
+    else :
+        links = {"unknown img size found"}
+    
     return links
 
 
