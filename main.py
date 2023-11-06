@@ -1,15 +1,16 @@
-import uvicorn
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 import httpx
-import endpoints
-import helper
+from logic.endpoints import *
+from logic.helper import *
 
 # * INFO : experimental
 
 
 # TODO : add the playlist, homepage features and more :)
 
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+# app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+app = FastAPI()
+app.title = "JioSaavnAPI"
 
 
 async def make_request(url: str):
@@ -19,12 +20,12 @@ async def make_request(url: str):
             return response.json()
         elif response.status_code == 202:
             raise HTTPException(
-                status_code=200,
-                detail={"msg": "server ip got banned for api rate limits"},
+                status_code=500,
+                detail="server ip got banned for api rate limits",
             )
         else:
             raise HTTPException(
-                status_code=200, detail={"msg": "unknown server error go debug it"}
+                status_code=500, detail="unknown server error go debug it"
             )
 
 
@@ -34,80 +35,100 @@ def base_url(request: Request):
 
 @app.get("/")
 async def root():
-    return {"msg": "Yes, its working fine !"}
+    return {"detail": "Yes, its working fine !"}
 
 
-@app.get("/search/song/{name}")
-async def search_handler(name):
-    url = endpoints.song_search(name)
+@app.get("/search/all/{query}")
+async def search_all(query):
+    url = search_all_url(query)
+    result = await make_request(url)
+    # result = result["results"]
+    return result
+
+
+# this func returns a list of all songs if found
+@app.get("/search/song/{song_name}")
+async def search_song(song_name, request: Request) -> []:
+    url = song_search(song_name)
     result = await make_request(url)
     result = result["results"]
-    return helper.resultRender(result)
+    if len(result) == 0:
+        raise HTTPException(status_code=404, detail="no song found")
+    return song_search_helper(result, base_url(request))
 
 
 @app.get("/song/{song_id}")
-async def song_handler(song_id):
-    url = endpoints.song_links(song_id)
+async def get_song_from_id(song_id, request: Request, use_mins: bool = False) -> Song:
+    url = song_links(song_id)
     result = await make_request(url)
     if "songs" in result:
         result = result["songs"][0]
-        return helper.jsonDataMaker(result)
+        return song_model_helper(result, use_mins, base_url(request))
     else:
-        return {"msg": "invalid song id"}
+        raise HTTPException(status_code=404, detail="no song found with the given id")
 
 
 @app.get("/search/album/{album_name}")
-async def album_search(album_name, request: Request):
-    url = endpoints.ablum_url(album_name)
+async def search_album(album_name, request: Request):
+    url = ablum_url(album_name)
     result = await make_request(url)
-    return helper.albumSearchHelper(result, base_url=base_url(request))
+    return albumSearchHelper(result, base_url=base_url(request))
 
 
 @app.get("/album/{album_id}")
-async def album_handler(album_id: int):
-    url = endpoints.album_by_id(album_id)
+async def get_album_from_id(album_id: int):
+    url = album_by_id(album_id)
     result = await make_request(url)
     return result
 
 
+# if the given song_id has no lyrics or even it does not exist it will give same error
 @app.get("/lyrics/{song_id}")
-async def lyrics_handler(song_id):
-    url = endpoints.lyrics_url(song_id)
+async def get_lyrics_from_song_id(song_id) -> dict:
+    url = lyrics_url(song_id)
     result = await make_request(url)
-    return helper.lyricsHelper(result)
+    if not "lyrics" in result:
+        raise HTTPException(status_code=404, detail="lyrics not found")
+    return {"lyrics": result["lyrics"]}
 
 
 @app.get("/homepage-data")
 async def homepage_data():
-    url = endpoints.get_homepage()
+    url = get_homepage()
     result = await make_request(url)
     return result
 
 
-@app.get('/create_radio/{song_id}')
+@app.get("/create_radio/{song_id}")
 async def create_radio(song_id):
     # ! : even if the song_id is wrong it will return you a station id which will give you zero songs
-    url = endpoints.create_radio_station(song_id)
+    url = create_radio_station(song_id)
     result = await make_request(url)
     return result
 
 
-@app.get('/get_radio_songs/{station_id}')
-async def get_radio_songs(station_id):
+@app.get("/get_radio_songs/{station_id}")
+async def get_radio_songs(
+    station_id,
+    request: Request,
+    use_mins: bool = False,
+    num_of_songs: int = 5,
+    # action="fwd" or "bck",
+) -> []:
     # ? : if the station id is correct you will get the songs else you will get nothing
-    url = endpoints.get_songs_from_radio(station_id)
+    url = get_songs_from_radio(station_id, num_of_songs)
     result = await make_request(url)
     if "error" in result:
         raise HTTPException(
             status_code=404,
-                detail={"msg": "wrong station id or generated from non-existing song id"},
+            detail="wrong station id or generated from non-existing song id",
         )
-    else :
+    else:
         # * : if everything goes right set the stage for result
-        return helper.radio_song_helper(result)
+        return radio_song_helper(result, base_url(request), use_mins)
 
 
 if __name__ == "__main__":
-    # disable reloder while deploying it to vercel
-    # uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+    import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8080)
