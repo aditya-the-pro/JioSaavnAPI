@@ -10,85 +10,31 @@ from models.song import Song
 from models.search_models.search_entity_song import SearchEntitySong
 
 
-# def jsonDataMaker(rawJson, base_url):
-#     k = {
-#         "id": rawJson["id"],
-#         "song": rawJson["title"],
-#         "album": rawJson["more_info"]["album"],
-#         "year": rawJson["year"],
-#         "primary_artist": artistHelper(
-#             rawJson["more_info"]["artistMap"]["primary_artists"], "primary"
-#         ),
-#         "singers": artistHelper(rawJson["more_info"]["artistMap"]["artists"], "singer"),
-#         "imgs": imgHelper(rawJson["image"]),
-#         "duration": durationHelper(int(rawJson["more_info"]["duration"])),
-#         "label": rawJson["more_info"]["label"],
-#         "album_id": int(rawJson["more_info"]["album_id"]),
-#         "language": rawJson["language"],
-#         "copyright_text": rawJson["more_info"]["copyright_text"],
-#         "has_lyrics": rawJson["more_info"]["has_lyrics"],
-#         "links": getDirectURL(rawJson["more_info"]["encrypted_media_url"]),
-#         "perma_url": rawJson["perma_url"],
-#         "album_url": rawJson["more_info"]["album_url"],
-#         "release_date": rawJson["more_info"]["release_date"],
-#         "api_url": {
-#             "album": f"{base_url}album/{rawJson['more_info']['album_id']}",
-#         },
-#     }
-#     return k
-
-
 def imgHelper(link):
     # ? : check the img size if it is 50x50 or 150x150
-    size = "50x50" if "50x50" in link else "150x150" if "150x150" in link else "500x500"
-    
-    
-    # ! : due to vercel only supporting py version 3.9 i am not using match here if new ver comes change it
-    
-    # match size:
-    #     case "50x50":
-    #         links = {
-    #             "50x50": link,
-    #             "150x150": link.replace(size, "150x150"),
-    #             "500x500": link.replace(size, "500x500"),
-    #         }
-    #     case "150x150":
-    #         links = {
-    #             "50x50": link.replace(size, "50x50"),
-    #             "150x150": link,
-    #             "500x500": link.replace(size, "500x500"),
-    #         }
-    #     case "500x500":
-    #         links = {
-    #             "50x50": link.replace(size, "50x50"),
-    #             "150x150": link.replace(size, "150x150"),
-    #             "500x500": link,
-    #         }
-    #     case _:
-    #         # ! : they improved their img quality i doubt
-    #         links = {"unknown img size found"}
-    
-    
-    if size == "50x50":
-        links = {
+    size = "50x50" if "50x50" in link else "150x150" if "150x150" in link else "500x500"    
+    match size:
+        case "50x50":
+            links = {
                 "50x50": link,
                 "150x150": link.replace(size, "150x150"),
                 "500x500": link.replace(size, "500x500"),
             }
-    elif size == "150x150":
-        links = {
-                 "50x50": link.replace(size, "50x50"),
-                 "150x150": link,
-                 "500x500": link.replace(size, "500x500"),
-             }
-    elif size == "500x500":
-        links = {
+        case "150x150":
+            links = {
+                "50x50": link.replace(size, "50x50"),
+                "150x150": link,
+                "500x500": link.replace(size, "500x500"),
+            }
+        case "500x500":
+             links = {
                  "50x50": link.replace(size, "50x50"),
                  "150x150": link.replace(size, "150x150"),
                  "500x500": link,
              }
-    else :
-        links = {"unknown img size found"}
+        case _:
+             # ! : they improved their img quality i doubt
+             links = {"unknown img size found"}
     
     return links
 
@@ -139,39 +85,10 @@ def artistHelper(data, mode="primary" or "singer"):
         return {"msg": "error"}
 
 
-# def resultRender(data: dict):
-#     if len(data) == 0:
-#         return {"msg": "no song found"}
-#     else:
-#         t = []
-
-#         for x in data:
-#             b = {
-#                 "id": x["id"],
-#                 "title": x["title"],
-#                 "imgs": imgHelper(x["image"]),
-#                 "album": x["more_info"]["album"],
-#                 "description": x["subtitle"],
-#                 "more_info": {
-#                     "vlink": x["more_info"].get("vlink"),
-#                     "singers": artistHelper(
-#                         x["more_info"]["artistMap"]["artists"], "singer"
-#                     ),
-#                     "language": x["language"],
-#                     "album_id": x["more_info"]["album_id"],
-#                 },
-#                 "perma_url": x["perma_url"],
-#             }
-
-#             t.append(b)
-
-#         return t
-
-
 def albumSearchHelper(json, base_url):
     # return json
     if len(json["albums"]["data"]) == 0:
-        return {"msg": "no album found"}
+        return {"detail": "no album found"}
     else:
         t = []
         for x in json["albums"]["data"]:
