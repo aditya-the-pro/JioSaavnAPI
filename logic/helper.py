@@ -9,10 +9,16 @@ from models.song import Song
 # its the short form of the song obj basically before htitting the serve for media_link
 from models.search_models.search_entity_song import SearchEntitySong
 
+# the ablum search model
+from models.search_models.search_entity_album import SearchEntityAlbum
+
+# its the std Album obj response that will be given out when called by a specifc album id
+from models.album import Album
+
 
 def imgHelper(link):
     # ? : check the img size if it is 50x50 or 150x150
-    size = "50x50" if "50x50" in link else "150x150" if "150x150" in link else "500x500"    
+    size = "50x50" if "50x50" in link else "150x150" if "150x150" in link else "500x500"
     match size:
         case "50x50":
             links = {
@@ -27,15 +33,15 @@ def imgHelper(link):
                 "500x500": link.replace(size, "500x500"),
             }
         case "500x500":
-             links = {
-                 "50x50": link.replace(size, "50x50"),
-                 "150x150": link.replace(size, "150x150"),
-                 "500x500": link,
-             }
+            links = {
+                "50x50": link.replace(size, "50x50"),
+                "150x150": link.replace(size, "150x150"),
+                "500x500": link,
+            }
         case _:
-             # ! : they improved their img quality i doubt
-             links = {"unknown img size found"}
-    
+            # ! : they improved their img quality i doubt
+            links = {"unknown img size found"}
+
     return links
 
 
@@ -120,7 +126,7 @@ def multiSongList(song_ids_str, base_url):
     return t
 
 
-def radio_song_helper(song_dict: dict, base_url: str,use_mins:bool):
+def radio_song_helper(song_dict: dict, base_url: str, use_mins: bool):
     # * : here make the full songs dict and do not append the station id again in the response
 
     relayer_dict = []
@@ -130,7 +136,7 @@ def radio_song_helper(song_dict: dict, base_url: str,use_mins:bool):
 
     song_dict = []
     for x in relayer_dict:
-        song_dict.append(song_model_helper(x, base_url=base_url,use_mins=use_mins))
+        song_dict.append(song_model_helper(x, base_url=base_url, use_mins=use_mins))
     return song_dict
 
 
@@ -186,6 +192,82 @@ def song_search_helper(data: dict, base_url):
                 api_url={
                     "song_url": f"{base_url}song/{x['id']}",
                     "album_url": f"{base_url}album/{x['more_info']['album_id']}",
+                },
+            )
+        )
+
+    return t
+
+
+def album_model_helper(data: dict, use_mins, base_url):
+    # let me prepare the song list here that will be passed inside album obj
+    songs_list = []
+    for song_data in data["songs"]:
+        songs_list.append(
+            Song(
+                id=song_data["id"],
+                song=song_data["song"],
+                album=song_data["album"],
+                year=int(song_data["year"]),
+                primary_artists=song_data["primary_artists"],
+                singers=song_data["singers"],
+                imgs=imgHelper(song_data["image"]),
+                # if we get the query param to use mins only then we will convert it to mins
+                duration=duration_helper(int(song_data["duration"]))
+                if use_mins
+                else int(song_data["duration"]),
+                label=song_data["label"],
+                album_id=int(song_data["albumid"]),
+                language=song_data["language"],
+                copyright_text=song_data["copyright_text"],
+                has_lyrics=song_data["has_lyrics"],
+                links=get_direct_links(song_data["encrypted_media_url"]),
+                perma_url=song_data["perma_url"],
+                album_url=song_data["album_url"],
+                release_date=song_data["release_date"],
+                api_url={
+                    "album": f"{base_url}album/{song_data['albumid']}",
+                },
+            )
+        )
+
+    # return data
+
+    return Album(
+        title=data["title"],
+        name=data["name"],
+        year=data["year"],
+        release_date=data["release_date"],
+        primary_artists=data["primary_artists"],
+        # maybe getting null , its okay to be safe here
+        primary_artists_id=data.get("primary_artists_id"),
+        albumid=data["albumid"],
+        perma_url=data["perma_url"],
+        imgs=imgHelper(data["image"]),
+        songs=songs_list,
+    )
+
+
+def album_search_helper(data: dict, base_url):
+    t = []
+    for x in data:
+        t.append(
+            SearchEntityAlbum(
+                id=x["id"],
+                title=x["title"],
+                imgs=imgHelper(x["image"]),
+                music=x["subtitle"],
+                description=x["header_desc"],
+                song_count=x["more_info"]["song_count"],
+                more_info={
+                    "year": x["year"],
+                    "language": x["language"],
+                },
+                perma_url=x["perma_url"],
+                api_url={
+                    # "songs": {}, it should be given when we request it by passing id
+                    #  ! : maybe bad idea
+                    "album": f"{base_url}album/{x['id']}",
                 },
             )
         )

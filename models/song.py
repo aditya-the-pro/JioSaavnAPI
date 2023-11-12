@@ -10,8 +10,7 @@ class Song(BaseModel):
     primary_artists: str
     singers: str
     imgs: dict
-    duration: str | int  # it may be in secs or mins:secs
-    # TODO : for duration have a query param for user to select what they want
+    duration: str | int  # it may be in secs or mins:secs 
     label: str
     album_id: int
     language: str

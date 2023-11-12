@@ -22,8 +22,8 @@ def auth_url(link) -> str:
     return f"https://www.jiosaavn.com/api.php?__call=song.generateAuthToken&url={link}&bitrate={bitrate}&api_version=4&_format=json&ctx=web6dot0&_marker=0"
 
 
-def ablum_url(id):
-    return f"https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query={id}"
+def search_ablum(name):
+    return f"https://www.jiosaavn.com/api.php?p=1&q={name}&_format=json&_marker=0&api_version=4&ctx=wap6dot0&n=20&__call=search.getAlbumResults"
 
 
 def album_by_id(album_id: int):

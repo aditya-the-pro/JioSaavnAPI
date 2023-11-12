@@ -14,8 +14,9 @@ app.title = "JioSaavnAPI"
 
 
 async def make_request(url: str):
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 202:
@@ -27,8 +28,14 @@ async def make_request(url: str):
             raise HTTPException(
                 status_code=500, detail="unknown server error go debug it"
             )
+    except httpx.HTTPError as e:
+        # sometimes it failes saying request timedout so safely fail the request
+        raise HTTPException(
+            status_code=500, detail=f"http request halted due to error: {e}"
+        )
 
 
+# sadly but i have to pass it to every route func didn't found any other work around
 def base_url(request: Request):
     return request.base_url._url
 
@@ -48,7 +55,7 @@ async def search_all(query):
 
 # this func returns a list of all songs if found
 @app.get("/search/song/{song_name}")
-async def search_song(song_name, request: Request) -> []:
+async def search_song_by_name(song_name, request: Request) -> []:
     url = song_search(song_name)
     result = await make_request(url)
     result = result["results"]
@@ -69,17 +76,18 @@ async def get_song_from_id(song_id, request: Request, use_mins: bool = False) ->
 
 
 @app.get("/search/album/{album_name}")
-async def search_album(album_name, request: Request):
-    url = ablum_url(album_name)
+async def search_album_by_name(album_name, request: Request) -> []:
+    url = search_ablum(album_name)
     result = await make_request(url)
-    return albumSearchHelper(result, base_url=base_url(request))
+    return album_search_helper(result["results"], base_url=base_url(request))
+    # return result
 
 
 @app.get("/album/{album_id}")
-async def get_album_from_id(album_id: int):
+async def get_album_from_id(album_id: int, request: Request, use_mins=False):
     url = album_by_id(album_id)
     result = await make_request(url)
-    return result
+    return album_model_helper(result, use_mins, base_url=base_url(request))
 
 
 # if the given song_id has no lyrics or even it does not exist it will give same error
